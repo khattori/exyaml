@@ -6,11 +6,18 @@ defmodule Exyaml do
   alias Exyaml.Dumper
   alias Exyaml.Loader
 
+  def load(device_or_path \\ :stdio)
+  def load(:stdio), do: Loader.load(:stdio, {:file, "<stdin>"})
+  def load(path) when is_binary(path), do: file_in_wrap(path, :load)
+  def load(device), do: Loader.load(device, {:file, "<io>"})
 
-  def load(device \\ :stdio), do: Loader.load(device)
+  def load_all(dervice_or_path \\ :stdio)
+  def load_all(:stdio), do: Loader.load_all(:stdio, {:file, "<stdin>"})
+  def load_all(path) when is_binary(path), do: file_in_wrap(path, :load_all)
+  def load_all(device), do: Loader.load_all(device, {:file, "<io>"})
 
   @doc """
-  Load YAML data.
+  Load YAML data from string.
 
   ## Examples
 
@@ -23,15 +30,26 @@ defmodule Exyaml do
       iex> Exyaml.loads("foo: bar")
       %{"foo" => "bar"}
   """
-  def loads(text) when is_binary(text) do
-    {:ok, sio} = StringIO.open(text)
-    load(sio)
-  end
+  def loads(text) when is_binary(text), do: string_in_wrap(:load, text)
 
   @doc """
-  Dump data into YAML
+  Load multiple YAML document from string and return data as stream.
   """
-  def dump(device \\ :stdio, data), do: Dumper.dump(device, data)
+  def loads_all(text) when is_binary(text), do: string_in_wrap(:load_all, text)
+
+  @doc ~S"""
+  Dump data into device or file.
+  """
+  def dump(device_or_path \\ :stdio, data)
+  def dump(path, data) when is_binary(path), do: file_out_wrap(path, :dump, data)
+  def dump(device, data), do: Dumper.dump(device, data)
+
+  @doc ~S"""
+  Dump enumerable data into device or file as multiple documents.
+  """
+  def dump_all(device_or_path \\ :stdio, data)
+  def dump_all(path, enumerable) when is_binary(path), do: file_out_wrap(path, :dump_all, enumerable)
+  def dump_all(device, enumerable), do: Dumper.dump_all(device, enumerable)
 
   @doc ~S"""
   Dump data into YAML formatted string.
@@ -78,13 +96,45 @@ defmodule Exyaml do
       "- 1\n- 2\n- foo\n- true\n"
 
   """
-  def dumps(data) do
-    {:ok, sio} = StringIO.open("")
-    dump(sio, data)
-    {:ok, {_, result}} = StringIO.close(sio)
+  def dumps(data), do: string_out_wrap(:dump, data)
+
+  @doc ~S"""
+  Dump enumerable data into YAML formatted string as multiple documents.
+
+  ## Examples
+
+      iex> Exyaml.dumps_all([])
+      ""
+
+      iex> Exyaml.dumps_all(["hello"])
+      "---\nhello\n"
+  """
+  def dumps_all(enumerable), do: string_out_wrap(:dump_all, enumerable)
+
+  defp file_in_wrap(path, fun_name) do
+    {:ok, io} = File.open(path)
+    result = apply(Loader, fun_name, [io, {:file, Path.basename(path)}])
+    :ok = File.close(io)
     result
   end
 
-  def dump_all(device \\ :stdio, enumerable), do: Dumper.dump_all(device, enumerable)
-  def load_all(device \\ :stdio), do: nil # Enumerable を返す
+  defp file_out_wrap(path, fun_name, data) do
+    {:ok, io} = File.open(path, [:write])
+    apply(Dumpler, fun_name, [io, data])
+    :ok = File.close(io)
+  end
+
+  defp string_in_wrap(fun_name, text) do
+    {:ok, io} = StringIO.open(text)
+    result = apply(Loader, fun_name, [io, :string])
+    {:ok, {"", ""}} = StringIO.close(io)
+    result
+  end
+
+  defp string_out_wrap(fun_name, data) do
+    {:ok, io} = StringIO.open("")
+    apply(Dumper, fun_name, [io, data])
+    {:ok, {"", result}} = StringIO.close(io)
+    result
+  end
 end

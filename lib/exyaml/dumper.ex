@@ -14,10 +14,14 @@ defmodule Exyaml.Dumper do
   @yaml_val ":"
   @yaml_txt "|"
   @yaml_txt_no_last_nl "|-"
-  @yaml_tag_str "!!str"
   @yaml_tag_set "!!set"
   @yaml_tag_omap "!!omap"
   @yaml_tag_bin "!!binary"
+
+
+  def dump(device, data) do
+    IO.puts(device, do_dump(data, 0))
+  end
 
   # StreamやEnumerable
   def dump_all(device, enumerable) do
@@ -25,10 +29,7 @@ defmodule Exyaml.Dumper do
       IO.puts(device, @yaml_sep)
       dump(device, data)
     end
-  end
-
-  def dump(device, data) do
-    IO.puts(device, do_dump(data, 0))
+    :ok
   end
 
   defp do_dump(nil, _n), do: ''
@@ -167,6 +168,4 @@ defmodule Exyaml.Dumper do
         ]
     end
   end
-
-  #def nullable?("true")string
 end
