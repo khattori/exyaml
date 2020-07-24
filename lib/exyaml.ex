@@ -6,6 +6,19 @@ defmodule Exyaml do
   alias Exyaml.Dumper
   alias Exyaml.Loader
 
+  @version Mix.Project.config[:version]
+
+  @doc ~S"""
+  Get version.
+
+  ## Examples
+
+      iex> Exyaml.version()
+      "0.1.0"
+
+  """
+  def version(), do: @version
+
   def load(device_or_path \\ :stdio)
   def load(:stdio), do: Loader.load(:stdio, {:file, "<stdin>"})
   def load(path) when is_binary(path), do: file_in_wrap(path, :load)
@@ -16,7 +29,7 @@ defmodule Exyaml do
   def load_all(path) when is_binary(path), do: file_in_wrap(path, :load_all)
   def load_all(device), do: Loader.load_all(device, {:file, "<io>"})
 
-  @doc """
+  @doc ~S"""
   Load YAML data from string.
 
   ## Examples
@@ -24,16 +37,65 @@ defmodule Exyaml do
       iex> Exyaml.loads("")
       nil
 
+      iex> Exyaml.loads("null")
+      nil
+
+      iex> Exyaml.loads("true")
+      true
+
       iex> Exyaml.loads("hello")
       "hello"
 
+      iex> Exyaml.loads("-123")
+      -123
+
+      iex> Exyaml.loads("3.1415926")
+      3.1415926
+
+      iex> Exyaml.loads("12:34:56")
+      ~T[12:34:56]
+
+      iex> Exyaml.loads("2020-07-24")
+      ~D[2020-07-24]
+
+      iex> Exyaml.loads("2000-01-01 00:00:00")
+      ~N[2000-01-01 00:00:00]
+
+      iex> Exyaml.loads("!!binary AQIDBAU=")
+      <<1, 2, 3, 4, 5>>
+
       iex> Exyaml.loads("foo: bar")
       %{"foo" => "bar"}
+
+      iex> Exyaml.loads("- 1")
+      [1]
+
+      iex> Exyaml.loads("- 1\nfoo: bar")
+      ** (Exyaml.ParseError) Invalid sequence: line 2, col 1
+
+      iex> Exyaml.loads("foo: bar\n-")
+      ** (Exyaml.ParseError) Expected sequence entry or mapping implicit key not found: line 2, col 1
+
+      iex> Exyaml.loads("---\n---\n")
+      ** (Exyaml.DocumentError) found multiple document
+
+      iex> Exyaml.loads("invalid \f")
+      ** (Exyaml.ParseError) Invalid character found: line 1
+
   """
   def loads(text) when is_binary(text), do: string_in_wrap(:load, text)
 
-  @doc """
+  @doc ~S"""
   Load multiple YAML document from string and return data as stream.
+
+  ## Examples
+
+      iex> Exyaml.loads_all("---\n---\n") |> Enum.to_list()
+      [nil, nil]
+
+      iex> Exyaml.loads_all("---\ntest\n...\n") |> Enum.to_list()
+      ["test"]
+
   """
   def loads_all(text) when is_binary(text), do: string_in_wrap(:load_all, text)
 
@@ -95,6 +157,12 @@ defmodule Exyaml do
       iex> Exyaml.dumps([1, 2, "foo", true])
       "- 1\n- 2\n- foo\n- true\n"
 
+      iex> Exyaml.dumps(MapSet.new([1, 2, 3]))
+      "!!set\n? 1\n? 2\n? 3\n"
+
+      iex> Stream.cycle(["test message" <> <<1,2,3,4,5>>]) |> Enum.take(10) |> Enum.join |> Exyaml.dumps
+      "!!binary |\n  dGVzdCBtZXNzYWdlAQIDBAV0ZXN0IG1lc3NhZ2UBAgMEBXRlc3QgbWVzc2FnZQECAwQFdGVzdCBt\n  ZXNzYWdlAQIDBAV0ZXN0IG1lc3NhZ2UBAgMEBXRlc3QgbWVzc2FnZQECAwQFdGVzdCBtZXNzYWdl\n  AQIDBAV0ZXN0IG1lc3NhZ2UBAgMEBXRlc3QgbWVzc2FnZQECAwQFdGVzdCBtZXNzYWdlAQIDBAU=\n"
+
   """
   def dumps(data), do: string_out_wrap(:dump, data)
 
@@ -120,7 +188,7 @@ defmodule Exyaml do
 
   defp file_out_wrap(path, fun_name, data) do
     {:ok, io} = File.open(path, [:write])
-    apply(Dumpler, fun_name, [io, data])
+    apply(Dumper, fun_name, [io, data])
     :ok = File.close(io)
   end
 

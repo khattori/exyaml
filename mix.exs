@@ -7,7 +7,8 @@ defmodule Exyaml.MixProject do
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      test_coverage: [tool: ExCoveralls]
     ]
   end
 
@@ -23,7 +24,8 @@ defmodule Exyaml.MixProject do
     [
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
-      {:yamerl, "~> 0.8.0"}
+      {:yamerl, "~> 0.8.0"},
+      {:excoveralls, "~> 0.13.0", only: :test}
     ]
   end
 end

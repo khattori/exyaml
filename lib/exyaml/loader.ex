@@ -131,17 +131,26 @@ defmodule Exyaml.Loader do
 
   defp node_to_term({:yamerl_str, :yamerl_node_str, _tag, _pos, str}), do: to_string(str)
   defp node_to_term({:yamerl_int, :yamerl_node_int, _tag, _pos, int}), do: int
+  defp node_to_term({:yamerl_float, :yamerl_node_float, _tag, _pos, float}), do: float
   defp node_to_term({:yamerl_null, :yamerl_node_null, _tag, _pos}), do: nil
   defp node_to_term({:yamerl_bool, :yamerl_node_bool, _tag, _pos, bool}), do: bool
   defp node_to_term({:yamerl_binary, :yamerl_node_binary, _tag, _pos, bin}), do: bin
-  defp node_to_term({:yamerl_timestamp, :yamerl_node_timestamp, _tag, _pos, year, month, day, :undefined, :undefined, :undefined, _frac, _tz}), do: Date.new(year, month, day)
-  defp node_to_term({:yamerl_timestamp, :yamerl_node_timestamp, _tag, _pos, :undefined, :undefined, :undefined, hour, minute, second, _frac, _tz}), do: Time.new(hour, minute, second)
-  defp node_to_term({:yamerl_timestamp, :yamerl_node_timestamp, _tag, _pos, year, month, day, hour, minute, second, _frac, _tz}), do: NaiveDateTime.new(year, month, day, hour, minute, second)
+  defp node_to_term({:yamerl_timestamp, :yamerl_node_timestamp, _tag, _pos, year, month, day, :undefined, :undefined, :undefined, _frac, _tz}) do
+    {:ok, date} = Date.new(year, month, day)
+    date
+  end
+  defp node_to_term({:yamerl_timestamp, :yamerl_node_timestamp, _tag, _pos, :undefined, :undefined, :undefined, hour, minute, second, _frac, _tz}) do
+    {:ok, time} = Time.new(hour, minute, second)
+    time
+  end
+  defp node_to_term({:yamerl_timestamp, :yamerl_node_timestamp, _tag, _pos, year, month, day, hour, minute, second, _frac, _tz}) do
+    {:ok, date_time} =  NaiveDateTime.new(year, month, day, hour, minute, second)
+    date_time
+  end
   defp node_to_term({:yamerl_seq, :yamerl_node_seq, _tag, _pos, seq, _count}), do: Enum.map(seq, &node_to_term/1)
   defp node_to_term({:yamerl_map, :yamerl_node_map, _tag, _pos, map}) do
     for {key, val} <- map, into: %{} do
       {node_to_term(key), node_to_term(val)}
     end
   end
-  defp node_to_term(node), do: node
 end
