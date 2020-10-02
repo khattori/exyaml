@@ -141,14 +141,9 @@ defmodule Exyaml.Dumper do
       iex> Exyaml.Dumper.printable?("テスト")
       true
 
-      iex> Exyaml.Dumpler.printable?("abc" <> <<0>>)
+      iex> Exyaml.Dumper.printable?("abc" <> <<0>>)
       false
 
-      iex> Exyaml.Dumper.printable?("abc" <> <<0>>, 2)
-      true
-
-      iex> Exyaml.Dumper.printable?("abc" <> <<0>>, 0)
-      true
   """
   def printable?(string) when is_binary(string) do
     not String.contains?(string, ["\v", "\b", "\f", "\e", "\d", "\a"]) and String.printable?(string)
