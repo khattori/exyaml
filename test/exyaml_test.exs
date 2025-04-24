@@ -32,16 +32,16 @@ defmodule ExyamlTest do
   end
 
   test "nested map" do
-    assert Exyaml.dumps(%{foo: 999, bar: %{"hoge" => "test"}}) == "bar:
+    assert Exyaml.dumps(%{foo: 999, bar: %{"hoge" => "test"}}) == "foo: 999
+bar:
   hoge: test
-foo: 999
 "
   end
 
   test "file dump" do
     :ok = Exyaml.dump(@test_file_path, "hello")
     {:ok, io} = File.open(@test_file_path)
-    assert "hello\n" == IO.read(io, :all)
+    assert "hello\n" == IO.read(io, :eof)
     on_exit (fn ->
       File.close(io)
       File.rm!(@test_file_path)
@@ -55,7 +55,7 @@ foo: 999
   test "file dump_all" do
     :ok = Exyaml.dump_all(@test_file_path, ["hello", "world"])
     {:ok, io} = File.open(@test_file_path)
-    assert "---\nhello\n---\nworld\n" == IO.read(io, :all)
+    assert "---\nhello\n---\nworld\n" == IO.read(io, :eof)
     on_exit (fn ->
       File.close(io)
       File.rm!(@test_file_path)

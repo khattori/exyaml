@@ -65,7 +65,7 @@ defmodule Exyaml.Loader do
   #
   # 読み込んだ文字列データをパーサーに入力していく
   #
-  defp do_stream({:error, reason}, _parser), do: raise IO.StreamError, reason: reason
+  defp do_stream({:error, reason}, _parser), do: raise(IO.StreamError, reason: reason)
   defp do_stream(:eof, parser), do: parser_next(parser, "", nil)
   defp do_stream(data, parser) do
     data = to_string(data)

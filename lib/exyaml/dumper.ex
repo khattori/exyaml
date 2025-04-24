@@ -32,7 +32,7 @@ defmodule Exyaml.Dumper do
     :ok
   end
 
-  defp do_dump(nil, _n), do: ''
+  defp do_dump(nil, _n), do: ""
   defp do_dump(data, _n) when is_atom(data), do: Atom.to_string(data)
   defp do_dump(data, _n) when is_integer(data), do: Integer.to_string(data)
   defp do_dump(data, _n) when is_float(data), do: Float.to_string(data)

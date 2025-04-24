@@ -133,6 +133,9 @@ defmodule Exyaml do
       iex> Exyaml.dumps(:this_is_atom)
       "this_is_atom\n"
 
+      iex> Exyaml.dumps("foo\nbar")
+      "|-\n  foo\n  bar\n"
+
       iex> Exyaml.dumps(~D[2020-07-06])
       "2020-07-06\n"
 
@@ -159,6 +162,9 @@ defmodule Exyaml do
 
       iex> Exyaml.dumps(MapSet.new([1, 2, 3]))
       "!!set\n? 1\n? 2\n? 3\n"
+
+      iex> Exyaml.dumps([foo: 123, bar: "hoge"])
+      "!!omap\n- foo: 123\n- bar: hoge\n"
 
       iex> Stream.cycle(["test message" <> <<1,2,3,4,5>>]) |> Enum.take(10) |> Enum.join |> Exyaml.dumps
       "!!binary |\n  dGVzdCBtZXNzYWdlAQIDBAV0ZXN0IG1lc3NhZ2UBAgMEBXRlc3QgbWVzc2FnZQECAwQFdGVzdCBt\n  ZXNzYWdlAQIDBAV0ZXN0IG1lc3NhZ2UBAgMEBXRlc3QgbWVzc2FnZQECAwQFdGVzdCBtZXNzYWdl\n  AQIDBAV0ZXN0IG1lc3NhZ2UBAgMEBXRlc3QgbWVzc2FnZQECAwQFdGVzdCBtZXNzYWdlAQIDBAU=\n"
